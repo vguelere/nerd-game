@@ -1,0 +1,17 @@
+{
+  "name": "nerd-game",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pixi.js": "^8.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^8.0.0"
+  }
+}
