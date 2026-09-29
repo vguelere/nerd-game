@@ -58,11 +58,13 @@ function createPlatform(
   return platform;
 }
 
-createPlatform(350, 520, 200, 30);
-createPlatform(800, 450, 200, 30);
-createPlatform(1300, 520, 250, 30);
-createPlatform(1900, 430, 200, 30);
-createPlatform(2400, 500, 300, 30);
+const platforms = [
+  createPlatform(350, 520, 200, 30),
+  createPlatform(800, 450, 200, 30),
+  createPlatform(1300, 520, 250, 30),
+  createPlatform(1900, 430, 200, 30),
+  createPlatform(2400, 500, 300, 30),
+];
 
 // =================================
 // PLAYER
@@ -122,7 +124,39 @@ let onGround = false;
 // GAME LOOP
 // =================================
 
+function checkPlatformCollision(
+  player: Graphics,
+  platform: Graphics,
+  previousY: number
+): boolean {
+
+  const playerBottom = player.y + player.height;
+
+  const platformTop = platform.y;
+
+  const horizontalCollision =
+    player.x + player.width > platform.x &&
+    player.x < platform.x + platform.width;
+
+  const wasAbove =
+    previousY + player.height <= platformTop;
+
+  const crossedPlatform =
+    playerBottom >= platformTop;
+
+  return (
+    velocityY >= 0 &&
+    horizontalCollision &&
+    wasAbove &&
+    crossedPlatform
+  );
+}
+
+
+
 app.ticker.add(() => {
+
+  const previousY = player.y;
 
   // -------------------------------
   // MOVIMENTO
@@ -158,6 +192,30 @@ app.ticker.add(() => {
 
     onGround = true;
   }
+
+// -------------------------------
+// PLATAFORMAS
+// -------------------------------
+
+for (const platform of platforms) {
+
+  if (
+    checkPlatformCollision(
+      player,
+      platform,
+      previousY
+    )
+  ) {
+
+    player.y =
+      platform.y - player.height;
+
+    velocityY = 0;
+
+    onGround = true;
+  }
+}
+
 
   // -------------------------------
   // PULO
