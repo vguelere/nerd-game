@@ -1,5 +1,6 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { Player } from './Player';
+import { Enemy } from './Enemy'
 
 const app = new Application();
 
@@ -77,6 +78,14 @@ const platforms = [
 const player = new Player();
 
 world.addChild(player);
+
+// =================================
+// INIMIGO
+// =================================
+
+const enemy = new Enemy(700, 620);
+
+world.addChild(enemy);
 
 // =================================
 // PORTÃO
@@ -203,6 +212,15 @@ app.ticker.add(() => {
   // =================================
   // MOVIMENTO
   // =================================
+
+
+
+  // MOVIMENTO DO PLAYER
+  // ...
+
+  enemy.update();
+
+  // resto do código
 
 // =================================
 // MOVIMENTO HORIZONTAL
