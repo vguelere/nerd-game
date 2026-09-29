@@ -1,4 +1,5 @@
 import { Application, Container, Graphics } from 'pixi.js';
+import { Player } from './Player';
 
 const app = new Application();
 
@@ -17,7 +18,7 @@ const WORLD_WIDTH = 3000;
 const GROUND_Y = 660;
 
 // =================================
-// MUNDO DO JOGO
+// MUNDO
 // =================================
 
 const world = new Container();
@@ -30,8 +31,11 @@ app.stage.addChild(world);
 
 const ground = new Graphics();
 
-ground.rect(0, GROUND_Y, WORLD_WIDTH, 100);
+ground.rect(0, 0, WORLD_WIDTH, 100);
 ground.fill('#5c4033');
+
+ground.x = 0;
+ground.y = GROUND_Y;
 
 world.addChild(ground);
 
@@ -70,13 +74,7 @@ const platforms = [
 // PLAYER
 // =================================
 
-const player = new Graphics();
-
-player.rect(0, 0, 40, 60);
-player.fill('#ff3333');
-
-player.x = 100;
-player.y = 600;
+const player = new Player();
 
 world.addChild(player);
 
@@ -109,30 +107,20 @@ window.addEventListener('keyup', (event) => {
 });
 
 // =================================
-// FÍSICA
-// =================================
-
-let velocityY = 0;
-
-const gravity = 0.7;
-const jumpForce = -14;
-const speed = 5;
-
-let onGround = false;
-
-// =================================
-// GAME LOOP
+// COLISÃO COM PLATAFORMA
 // =================================
 
 function checkPlatformCollision(
-  player: Graphics,
+  player: Player,
   platform: Graphics,
   previousY: number
 ): boolean {
 
-  const playerBottom = player.y + player.height;
+  const playerBottom =
+    player.y + player.height;
 
-  const platformTop = platform.y;
+  const platformTop =
+    platform.y;
 
   const horizontalCollision =
     player.x + player.width > platform.x &&
@@ -145,112 +133,122 @@ function checkPlatformCollision(
     playerBottom >= platformTop;
 
   return (
-    velocityY >= 0 &&
+    player.velocityY >= 0 &&
     horizontalCollision &&
     wasAbove &&
     crossedPlatform
   );
 }
 
-
+// =================================
+// GAME LOOP
+// =================================
 
 app.ticker.add(() => {
 
+  // Guarda posição anterior
   const previousY = player.y;
 
-  // -------------------------------
+  // =================================
   // MOVIMENTO
-  // -------------------------------
-
-  if (keys['a'] || keys['arrowleft']) {
-    player.x -= speed;
-  }
-
-  if (keys['d'] || keys['arrowright']) {
-    player.x += speed;
-  }
-
-  // -------------------------------
-  // GRAVIDADE
-  // -------------------------------
-
-  velocityY += gravity;
-
-  player.y += velocityY;
-
-  onGround = false;
-
-  // -------------------------------
-  // CHÃO
-  // -------------------------------
-
-  if (player.y + player.height >= GROUND_Y) {
-
-    player.y = GROUND_Y - player.height;
-
-    velocityY = 0;
-
-    onGround = true;
-  }
-
-// -------------------------------
-// PLATAFORMAS
-// -------------------------------
-
-for (const platform of platforms) {
+  // =================================
 
   if (
-    checkPlatformCollision(
-      player,
-      platform,
-      previousY
-    )
+    keys['a'] ||
+    keys['arrowleft']
+  ) {
+    player.moveLeft();
+  }
+
+  if (
+    keys['d'] ||
+    keys['arrowright']
+  ) {
+    player.moveRight();
+  }
+
+  // =================================
+  // GRAVIDADE
+  // =================================
+
+  player.applyGravity();
+
+  player.onGround = false;
+
+  // =================================
+  // CHÃO
+  // =================================
+
+  if (
+    player.y + player.height >= GROUND_Y
   ) {
 
     player.y =
-      platform.y - player.height;
+      GROUND_Y - player.height;
 
-    velocityY = 0;
+    player.velocityY = 0;
 
-    onGround = true;
+    player.onGround = true;
   }
-}
 
+  // =================================
+  // PLATAFORMAS
+  // =================================
 
-  // -------------------------------
+  for (const platform of platforms) {
+
+    if (
+      checkPlatformCollision(
+        player,
+        platform,
+        previousY
+      )
+    ) {
+
+      player.y =
+        platform.y - player.height;
+
+      player.velocityY = 0;
+
+      player.onGround = true;
+    }
+  }
+
+  // =================================
   // PULO
-  // -------------------------------
+  // =================================
 
   if (
-    (keys['w'] ||
-      keys['arrowup'] ||
-      keys[' ']) &&
-    onGround
+    keys['w'] ||
+    keys['arrowup'] ||
+    keys[' ']
   ) {
-
-    velocityY = jumpForce;
-
-    onGround = false;
+    player.jump();
   }
 
-  // -------------------------------
+  // =================================
   // LIMITES DO MAPA
-  // -------------------------------
+  // =================================
 
   if (player.x < 0) {
     player.x = 0;
   }
 
-  if (player.x + player.width > WORLD_WIDTH) {
-    player.x = WORLD_WIDTH - player.width;
+  if (
+    player.x + player.width >
+    WORLD_WIDTH
+  ) {
+    player.x =
+      WORLD_WIDTH - player.width;
   }
 
   // =================================
   // CÂMERA
   // =================================
 
-  const screenCenter = app.screen.width / 2;
+  const screenCenter =
+    app.screen.width / 2;
 
-  world.x = screenCenter - player.x;
-
+  world.x =
+    screenCenter - player.x;
 });
