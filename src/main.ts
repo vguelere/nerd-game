@@ -106,6 +106,57 @@ window.addEventListener('keyup', (event) => {
   keys[event.key.toLowerCase()] = false;
 });
 
+
+
+// =================================
+// COLISÃO LATERAL
+// =================================
+
+function checkHorizontalCollision(
+  player: Player,
+  platform: Graphics,
+  previousX: number
+): boolean {
+
+  const playerTop = player.y;
+  const playerBottom = player.y + player.height;
+
+  const platformTop = platform.y;
+  const platformBottom = platform.y + platform.height;
+
+  const verticalCollision =
+    playerBottom > platformTop &&
+    playerTop < platformBottom;
+
+  const playerRight =
+    player.x + player.width;
+
+  const playerLeft =
+    player.x;
+
+  const platformRight =
+    platform.x + platform.width;
+
+  const platformLeft =
+    platform.x;
+
+  // Bateu na esquerda da plataforma
+  const hitLeft =
+    previousX + player.width <= platformLeft &&
+    playerRight >= platformLeft;
+
+  // Bateu na direita da plataforma
+  const hitRight =
+    previousX >= platformRight &&
+    playerLeft <= platformRight;
+
+  return (
+    verticalCollision &&
+    (hitLeft || hitRight)
+  );
+}
+
+
 // =================================
 // COLISÃO COM PLATAFORMA
 // =================================
@@ -153,20 +204,57 @@ app.ticker.add(() => {
   // MOVIMENTO
   // =================================
 
-  if (
-    keys['a'] ||
-    keys['arrowleft']
-  ) {
-    player.moveLeft();
-  }
+// =================================
+// MOVIMENTO HORIZONTAL
+// =================================
+
+const previousX = player.x;
+
+if (
+  keys['a'] ||
+  keys['arrowleft']
+) {
+  player.moveLeft();
+}
+
+if (
+  keys['d'] ||
+  keys['arrowright']
+) {
+  player.moveRight();
+}
+
+
+// =================================
+// COLISÃO LATERAL
+// =================================
+
+for (const platform of platforms) {
 
   if (
-    keys['d'] ||
-    keys['arrowright']
+    checkHorizontalCollision(
+      player,
+      platform,
+      previousX
+    )
   ) {
-    player.moveRight();
-  }
 
+    // Estava vindo pela esquerda
+    if (previousX + player.width <= platform.x) {
+
+      player.x =
+        platform.x - player.width;
+
+    }
+
+    // Estava vindo pela direita
+    else if (previousX >= platform.x + platform.width) {
+
+      player.x =
+        platform.x + platform.width;
+    }
+  }
+}
   // =================================
   // GRAVIDADE
   // =================================

@@ -6,7 +6,7 @@ export class Player extends Graphics {
 
   speed = 5;
   gravity = 0.7;
-  jumpForce = -14;
+  jumpForce = -20;
 
   onGround = false;
 
