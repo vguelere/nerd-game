@@ -638,6 +638,7 @@ app.ticker.add(() => {
       player.height;
 
   }
+  
 
   // =================================
   // CÂMERA
