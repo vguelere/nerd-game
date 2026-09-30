@@ -1,8 +1,20 @@
-import { Application, Container, Graphics } from 'pixi.js';
+import {
+  Application,
+  Container,
+  Graphics,
+  Assets,
+  AnimatedSprite,
+  Spritesheet
+} from 'pixi.js';
+
 import { Player } from './Player';
 import { Enemy } from './Enemy';
 
 const app = new Application();
+
+// =================================
+// PIXI
+// =================================
 
 await app.init({
   background: '#5c94fc',
@@ -26,10 +38,6 @@ const GROUND_Y = 660;
 // =================================
 // MUNDO
 // =================================
-
-const PLAYER_START_X = -1500;
-const PLAYER_START_Y = 600;
-
 
 const world = new Container();
 
@@ -65,6 +73,7 @@ function createPlatform(
   width: number,
   height: number
 ) {
+
   const platform = new Graphics();
 
   platform.rect(
@@ -85,11 +94,17 @@ function createPlatform(
 }
 
 const platforms = [
+
   createPlatform(350, 520, 200, 30),
+
   createPlatform(800, 450, 200, 30),
+
   createPlatform(1300, 520, 250, 30),
+
   createPlatform(1900, 430, 200, 30),
+
   createPlatform(2400, 500, 300, 30),
+
 ];
 
 // =================================
@@ -102,6 +117,118 @@ player.x = -700;
 player.y = 600;
 
 world.addChild(player);
+
+// Esconde apenas o desenho
+// vermelho do Player.
+// A física continua funcionando.
+
+player.visible = false;
+
+// =================================
+// ALICIA
+// =================================
+
+let alicia: AnimatedSprite | null = null;
+
+try {
+
+  const sheet =
+    await Assets.load<Spritesheet>({
+      alias: 'aliciaIdle',
+      src: '/assets/player/alicia-idle.json'
+    });
+
+  console.log(
+    'Spritesheet da Alicia:',
+    sheet
+  );
+
+  // =================================
+  // PEGA OS 22 FRAMES
+  // =================================
+
+  const textures = [];
+
+  for (
+    let i = 1;
+    i <= 22;
+    i++
+  ) {
+
+    const frameName =
+      `idle_${String(i).padStart(2, '0')}.png`;
+
+    const texture =
+      sheet.textures[frameName];
+
+    if (!texture) {
+
+      console.error(
+        `Frame não encontrado: ${frameName}`
+      );
+
+      continue;
+    }
+
+    textures.push(texture);
+
+  }
+
+  console.log(
+    'Frames encontrados:',
+    textures.length
+  );
+
+  // =================================
+  // CRIA ANIMAÇÃO
+  // =================================
+
+  if (textures.length > 0) {
+
+    alicia =
+      new AnimatedSprite(textures);
+
+    alicia.animationSpeed =
+      0.40;
+
+    alicia.loop = true;
+
+    // Tamanho temporário maior
+    // para confirmar que está aparecendo.
+
+    alicia.width = 228;
+    alicia.height = 228;
+
+    // Ponto de origem nos pés
+
+    alicia.anchor.set(
+      0.5,
+      1
+    );
+
+    // Adiciona ao mundo
+
+    world.addChild(alicia);
+
+    // Começa animação
+
+    alicia.play();
+
+    console.log(
+      'Alicia criada com sucesso!'
+    );
+
+  }
+
+}
+catch (error) {
+
+  console.error(
+    'ERRO AO CARREGAR ALICIA:',
+    error
+  );
+
+}
 
 // =================================
 // INIMIGO
@@ -144,14 +271,22 @@ const keys: Record<string, boolean> = {};
 window.addEventListener(
   'keydown',
   (event) => {
-    keys[event.key.toLowerCase()] = true;
+
+    keys[
+      event.key.toLowerCase()
+    ] = true;
+
   }
 );
 
 window.addEventListener(
   'keyup',
   (event) => {
-    keys[event.key.toLowerCase()] = false;
+
+    keys[
+      event.key.toLowerCase()
+    ] = false;
+
   }
 );
 
@@ -169,37 +304,46 @@ function checkHorizontalCollision(
     player.y;
 
   const playerBottom =
-    player.y + player.height;
+    player.y +
+    player.height;
 
   const platformTop =
     platform.y;
 
   const platformBottom =
-    platform.y + platform.height;
+    platform.y +
+    platform.height;
 
   const verticalCollision =
     playerBottom > platformTop &&
     playerTop < platformBottom;
 
   const playerRight =
-    player.x + player.width;
+    player.x +
+    player.width;
 
   const playerLeft =
     player.x;
 
   const platformRight =
-    platform.x + platform.width;
+    platform.x +
+    platform.width;
 
   const platformLeft =
     platform.x;
 
   const hitLeft =
-    previousX + player.width <= platformLeft &&
-    playerRight >= platformLeft;
+    previousX +
+      player.width <=
+    platformLeft &&
+    playerRight >=
+    platformLeft;
 
   const hitRight =
-    previousX >= platformRight &&
-    playerLeft <= platformRight;
+    previousX >=
+    platformRight &&
+    playerLeft <=
+    platformRight;
 
   return (
     verticalCollision &&
@@ -218,22 +362,28 @@ function checkPlatformCollision(
 ): boolean {
 
   const playerBottom =
-    player.y + player.height;
+    player.y +
+    player.height;
 
   const platformTop =
     platform.y;
 
   const horizontalCollision =
-    player.x + player.width > platform.x &&
+    player.x +
+      player.width >
+    platform.x &&
     player.x <
-      platform.x + platform.width;
+      platform.x +
+      platform.width;
 
   const wasAbove =
-    previousY + player.height <=
+    previousY +
+      player.height <=
     platformTop;
 
   const crossedPlatform =
-    playerBottom >= platformTop;
+    playerBottom >=
+    platformTop;
 
   return (
     player.velocityY >= 0 &&
@@ -242,7 +392,6 @@ function checkPlatformCollision(
     crossedPlatform
   );
 }
-
 
 // =================================
 // COLISÃO COM INIMIGO
@@ -254,12 +403,20 @@ function checkEnemyCollision(
 ): boolean {
 
   const horizontalCollision =
-    player.x + player.width > enemy.x &&
-    player.x < enemy.x + enemy.width;
+    player.x +
+      player.width >
+    enemy.x &&
+    player.x <
+      enemy.x +
+      enemy.width;
 
   const verticalCollision =
-    player.y + player.height > enemy.y &&
-    player.y < enemy.y + enemy.height;
+    player.y +
+      player.height >
+    enemy.y &&
+    player.y <
+      enemy.y +
+      enemy.height;
 
   return (
     horizontalCollision &&
@@ -267,40 +424,47 @@ function checkEnemyCollision(
   );
 }
 
-
 // =================================
 // GAME LOOP
 // =================================
 
 app.ticker.add(() => {
 
-  // Guarda a posição anterior
-  const previousX = player.x;
-  const previousY = player.y;
+  const previousX =
+    player.x;
+
+  const previousY =
+    player.y;
 
   // =================================
-  // MOVIMENTO DO PLAYER
+  // MOVIMENTO
   // =================================
 
   if (
     keys['a'] ||
     keys['arrowleft']
   ) {
+
     player.moveLeft();
+
   }
 
   if (
     keys['d'] ||
     keys['arrowright']
   ) {
+
     player.moveRight();
+
   }
 
   // =================================
   // COLISÃO LATERAL
   // =================================
 
-  for (const platform of platforms) {
+  for (
+    const platform of platforms
+  ) {
 
     if (
       checkHorizontalCollision(
@@ -310,29 +474,32 @@ app.ticker.add(() => {
       )
     ) {
 
-      // Player vindo pela esquerda
       if (
-        previousX + player.width <=
+        previousX +
+          player.width <=
         platform.x
       ) {
 
         player.x =
           platform.x -
           player.width;
+
       }
 
-      // Player vindo pela direita
       else if (
         previousX >=
         platform.x +
-        platform.width
+          platform.width
       ) {
 
         player.x =
           platform.x +
           platform.width;
+
       }
+
     }
+
   }
 
   // =================================
@@ -348,7 +515,8 @@ app.ticker.add(() => {
   // =================================
 
   if (
-    player.y + player.height >=
+    player.y +
+      player.height >=
     GROUND_Y
   ) {
 
@@ -359,13 +527,16 @@ app.ticker.add(() => {
     player.velocityY = 0;
 
     player.onGround = true;
+
   }
 
   // =================================
   // PLATAFORMAS
   // =================================
 
-  for (const platform of platforms) {
+  for (
+    const platform of platforms
+  ) {
 
     if (
       checkPlatformCollision(
@@ -382,7 +553,9 @@ app.ticker.add(() => {
       player.velocityY = 0;
 
       player.onGround = true;
+
     }
+
   }
 
   // =================================
@@ -396,6 +569,7 @@ app.ticker.add(() => {
   ) {
 
     player.jump();
+
   }
 
   // =================================
@@ -404,44 +578,65 @@ app.ticker.add(() => {
 
   enemy.update();
 
-// =================================
-// DANO DO INIMIGO
-// =================================
-
-if (
-  checkEnemyCollision(
-    player,
-    enemy
-  )
-) {
-
-  player.takeDamage(1);
-
-  console.log(
-    `Vida: ${player.health}/${player.maxHealth}`
-  );
-}
-  
   // =================================
-  // LIMITES DO MAPA
+  // DANO
   // =================================
 
   if (
-    player.x < WORLD_LEFT
+    checkEnemyCollision(
+      player,
+      enemy
+    )
+  ) {
+
+    player.takeDamage(1);
+
+    console.log(
+      `Vida: ${player.health}/${player.maxHealth}`
+    );
+
+  }
+
+  // =================================
+  // LIMITES
+  // =================================
+
+  if (
+    player.x <
+    WORLD_LEFT
   ) {
 
     player.x =
       WORLD_LEFT;
+
   }
 
   if (
-    player.x + player.width >
+    player.x +
+      player.width >
     WORLD_RIGHT
   ) {
 
     player.x =
       WORLD_RIGHT -
       player.width;
+
+  }
+
+  // =================================
+  // ALICIA SEGUE O PLAYER
+  // =================================
+
+  if (alicia) {
+
+    alicia.x =
+      player.x +
+      player.width / 2;
+
+    alicia.y =
+      player.y +
+      player.height;
+
   }
 
   // =================================
@@ -455,16 +650,13 @@ if (
     screenCenter -
     player.x;
 
-  // Limite esquerdo da câmera
   const minCameraX =
     app.screen.width -
     WORLD_RIGHT;
 
-  // Limite direito da câmera
   const maxCameraX =
     -WORLD_LEFT;
 
-  // Mantém a câmera dentro do mapa
   cameraX =
     Math.min(
       maxCameraX,
@@ -476,4 +668,5 @@ if (
 
   world.x =
     cameraX;
+
 });

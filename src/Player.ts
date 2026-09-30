@@ -10,6 +10,9 @@ export class Player extends Graphics {
 
   onGround = false;
 
+  health = 3;
+  maxHealth = 3;
+
   constructor() {
 
     super();
@@ -56,5 +59,14 @@ export class Player extends Graphics {
 
     this.y +=
       this.velocityY;
+  }
+
+  takeDamage(amount: number) {
+
+    this.health -= amount;
+
+    if (this.health < 0) {
+      this.health = 0;
+    }
   }
 }
