@@ -2,7 +2,7 @@
 
 Um jogo 2D desenvolvido com **TypeScript + PixiJS**, criado como projeto autoral para explorar desenvolvimento de jogos, animação por spritesheet, programação orientada a objetos e construção de interfaces interativas.
 
-O projeto acompanha **Alicia**, uma personagem que pode se movimentar pelo cenário, executar animações e enfrentar inimigos em uma experiência inspirada nos clássicos jogos 2D.
+O projeto acompanha **Olivia**, uma personagem que pode se movimentar pelo cenário, executar animações e enfrentar inimigos em uma experiência inspirada nos clássicos jogos 2D.
 
 ---
 
@@ -46,12 +46,12 @@ nerd-game/
 │
 ├── assets/
 │   ├── player/
-│   │   ├── alicia-idle.json
-│   │   ├── alicia-idle.png
-│   │   ├── alicia-walk.json
-│   │   ├── alicia-walk.png
-│   │   ├── alicia-jump.json
-│   │   └── alicia-jump.png
+│   │   ├── Olivia-idle.json
+│   │   ├── Olivia-idle.png
+│   │   ├── Olivia-walk.json
+│   │   ├── Olivia-walk.png
+│   │   ├── Olivia-jump.json
+│   │   └── Olivia-jump.png
 │   │
 │   └── ...
 │
@@ -72,7 +72,7 @@ A estrutura pode evoluir conforme novas mecânicas e sistemas forem adicionados 
 
 ## 🧍 Personagem
 
-A personagem principal é **Alicia**.
+A personagem principal é **Olivia**.
 
 O sistema de animação utiliza spritesheets, permitindo que cada estado do personagem seja composto por vários frames.
 
@@ -87,14 +87,14 @@ Cada animação é organizada através de arquivos `.png` e `.json`, permitindo 
 Exemplo:
 
 ```text
-alicia-idle.png
-alicia-idle.json
+Olivia-idle.png
+Olivia-idle.json
 
-alicia-walk.png
-alicia-walk.json
+Olivia-walk.png
+Olivia-walk.json
 
-alicia-jump.png
-alicia-jump.json
+Olivia-jump.png
+Olivia-jump.json
 ```
 
 ---
@@ -107,8 +107,8 @@ Exemplo:
 
 ```typescript
 const idleSheet = await Assets.load<Spritesheet>({
-  alias: 'aliciaIdle',
-  src: '/assets/player/alicia-idle.json'
+  alias: 'OliviaIdle',
+  src: '/assets/player/Olivia-idle.json'
 });
 ```
 
@@ -281,7 +281,7 @@ Entre os principais objetivos estão:
 * [x] Estrutura inicial do jogo
 * [x] PixiJS
 * [x] TypeScript
-* [x] Personagem Alicia
+* [x] Personagem Olivia
 * [x] Sistema de Player
 * [x] Animação Idle
 * [x] Animação Walk
