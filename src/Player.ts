@@ -4,9 +4,9 @@ export class Player extends Graphics {
 
   velocityY = 0;
 
-  speed = 5;
+  speed = 10;
   gravity = 0.7;
-  jumpForce = -12;
+  jumpForce = -15;
 
   onGround = false;
 
