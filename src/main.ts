@@ -1,10 +1,4 @@
-import {
-  Application,
-  Container,
-  Graphics,
-  Text
-} from 'pixi.js';
-
+import { Application, Container, Graphics } from 'pixi.js';
 import { Player } from './Player';
 import { Enemy } from './Enemy';
 
@@ -29,33 +23,17 @@ const WORLD_WIDTH =
 
 const GROUND_Y = 660;
 
-const PLAYER_START_X = -1500;
-const PLAYER_START_Y = 600;
-
 // =================================
 // MUNDO
 // =================================
 
+const PLAYER_START_X = -1500;
+const PLAYER_START_Y = 600;
+
+
 const world = new Container();
 
 app.stage.addChild(world);
-
-// =================================
-// HUD
-// =================================
-
-const healthText = new Text({
-  text: '❤️ ❤️ ❤️',
-  style: {
-    fontSize: 28,
-    fill: '#ffffff',
-  },
-});
-
-healthText.x = 20;
-healthText.y = 20;
-
-app.stage.addChild(healthText);
 
 // =================================
 // CHÃO
@@ -120,36 +98,10 @@ const platforms = [
 
 const player = new Player();
 
-player.x = PLAYER_START_X;
-player.y = PLAYER_START_Y;
+player.x = -700;
+player.y = 600;
 
 world.addChild(player);
-
-// =================================
-// HUD - VIDA
-// =================================
-
-function updateHealthUI() {
-
-  let hearts = '';
-
-  for (
-    let i = 0;
-    i < player.maxHealth;
-    i++
-  ) {
-
-    if (i < player.health) {
-      hearts += '❤️ ';
-    } else {
-      hearts += '🖤 ';
-    }
-  }
-
-  healthText.text = hearts;
-}
-
-updateHealthUI();
 
 // =================================
 // INIMIGO
@@ -291,6 +243,7 @@ function checkPlatformCollision(
   );
 }
 
+
 // =================================
 // COLISÃO COM INIMIGO
 // =================================
@@ -302,13 +255,11 @@ function checkEnemyCollision(
 
   const horizontalCollision =
     player.x + player.width > enemy.x &&
-    player.x <
-      enemy.x + enemy.width;
+    player.x < enemy.x + enemy.width;
 
   const verticalCollision =
     player.y + player.height > enemy.y &&
-    player.y <
-      enemy.y + enemy.height;
+    player.y < enemy.y + enemy.height;
 
   return (
     horizontalCollision &&
@@ -316,13 +267,14 @@ function checkEnemyCollision(
   );
 }
 
+
 // =================================
 // GAME LOOP
 // =================================
 
 app.ticker.add(() => {
 
-  // Guarda posição anterior
+  // Guarda a posição anterior
   const previousX = player.x;
   const previousY = player.y;
 
@@ -452,48 +404,24 @@ app.ticker.add(() => {
 
   enemy.update();
 
-  // =================================
-  // DANO DO INIMIGO
-  // =================================
+// =================================
+// DANO DO INIMIGO
+// =================================
 
-  if (
-    checkEnemyCollision(
-      player,
-      enemy
-    )
-  ) {
+if (
+  checkEnemyCollision(
+    player,
+    enemy
+  )
+) {
 
-    player.takeDamage(1);
+  player.takeDamage(1);
 
-    updateHealthUI();
-
-    console.log(
-      `Vida: ${player.health}/${player.maxHealth}`
-    );
-  }
-
-  // =================================
-  // MORTE DO PLAYER
-  // =================================
-
-  if (
-    player.health <= 0
-  ) {
-
-    player.x =
-      PLAYER_START_X;
-
-    player.y =
-      PLAYER_START_Y;
-
-    player.velocityY = 0;
-
-    player.health =
-      player.maxHealth;
-
-    updateHealthUI();
-  }
-
+  console.log(
+    `Vida: ${player.health}/${player.maxHealth}`
+  );
+}
+  
   // =================================
   // LIMITES DO MAPA
   // =================================
@@ -536,6 +464,7 @@ app.ticker.add(() => {
   const maxCameraX =
     -WORLD_LEFT;
 
+  // Mantém a câmera dentro do mapa
   cameraX =
     Math.min(
       maxCameraX,
