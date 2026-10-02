@@ -1,0 +1,133 @@
+{
+  "frames": {
+    "smoke_01.png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 300,
+        "h": 768
+      }
+    },
+    "smoke_02.png": {
+      "frame": {
+        "x": 300,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 300,
+        "h": 768
+      }
+    },
+    "smoke_03.png": {
+      "frame": {
+        "x": 600,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 300,
+        "h": 768
+      }
+    },
+    "smoke_04.png": {
+      "frame": {
+        "x": 900,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 300,
+        "h": 768
+      }
+    },
+    "smoke_05.png": {
+      "frame": {
+        "x": 1200,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 300,
+        "h": 768
+      }
+    },
+    "smoke_06.png": {
+      "frame": {
+        "x": 1500,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 300,
+        "h": 768
+      }
+    }
+  },
+  "meta": {
+    "image": "smoke.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1800,
+      "h": 768
+    },
+    "scale": "1"
+  }
+}

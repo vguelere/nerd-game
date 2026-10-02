@@ -43,12 +43,19 @@ const GROUND_Y = 680;
 // =================================
 
 const backgroundLayer = new Container();
+const waterLayer = new Container();
 const cityLayer = new Container();
 const world = new Container();
+const smokeLayer = new Container();
+
 
 app.stage.addChild(backgroundLayer);
 app.stage.addChild(cityLayer);
+app.stage.addChild(waterLayer);
+app.stage.addChild(smokeLayer);
 app.stage.addChild(world);
+
+
 
 // =================================
 // MAPA - FUNDO
@@ -81,6 +88,113 @@ background2.y = 0;
 backgroundLayer.addChild(background);
 backgroundLayer.addChild(background2);
 
+
+// =================================
+// SMOKE
+// =================================
+
+const smokeSheet =
+  await Assets.load<Spritesheet>({
+    alias: 'smoke',
+    src: '/assets/effects/smoke.json'
+  });
+  
+
+const smokeTextures = [
+  smokeSheet.textures['smoke_01.png'],
+  smokeSheet.textures['smoke_02.png'],
+  smokeSheet.textures['smoke_03.png'],
+  smokeSheet.textures['smoke_04.png'],
+];
+
+const smokeSprite = new AnimatedSprite(
+  smokeTextures
+);
+
+smokeSprite.animationSpeed = 0.1;
+smokeSprite.loop = true;
+smokeSprite.scale.set(0.5);
+smokeSprite.x = 2000;
+smokeSprite.y = 250;
+
+smokeSprite.play();
+
+smokeLayer.addChild(smokeSprite);
+
+for (let i = 0; i < 14; i++) {
+
+  const smoke = new AnimatedSprite(smokeTextures);
+
+  smoke.animationSpeed = 0.1;
+  smoke.loop = true;
+
+  smoke.scale.set(0.5);
+
+  smoke.x = i * 600; // ← aumenta o espaçamento
+  smoke.y = 200;
+
+  smoke.gotoAndPlay(i % smokeTextures.length);
+
+  smokeLayer.addChild(smoke);
+}
+
+
+//
+// AGUA
+//
+
+const waterTexture = await Assets.load<Texture>(
+  '/assets/effects/water.png'
+);
+
+const waterTextures: Texture[] = [];
+
+const FRAME_WIDTH = 400;
+const FRAME_HEIGHT = 480;
+
+for (let i = 0; i < 5; i++) {
+
+  waterTextures.push(
+    new Texture({
+      source: waterTexture.source,
+      frame: new Rectangle(
+        i * FRAME_WIDTH,
+        0,
+        FRAME_WIDTH,
+        FRAME_HEIGHT
+      )
+    })
+  );
+}
+
+const waterSprite = new AnimatedSprite(waterTextures);
+
+waterSprite.animationSpeed = 16 / 60;
+waterSprite.loop = true;
+
+waterSprite.x = 0;
+waterSprite.y = 480;
+
+waterSprite.play();
+
+waterLayer.addChild(waterSprite);
+
+
+for (let i = 0; i < 14; i++) {
+
+  const water = new AnimatedSprite(waterTextures);
+
+  water.animationSpeed = 4 / 60;
+  water.loop = true;
+
+  water.x = i * 400;
+  water.y = 580;
+
+  // Pequena diferença para não ficarem todas sincronizadas
+  water.gotoAndPlay(i % waterTextures.length);
+
+  waterLayer.addChild(water);
+}
 
 // =================================
 // MAPA - CIDADE
@@ -674,6 +788,13 @@ function updateCamera() {
 
   // Fundo anda ainda mais devagar.
   background.x = cameraX * 0.2;
+
+  // smoke
+  smokeLayer.x = cameraX * 0.7;
+
+  //water
+  waterLayer.x = cameraX * 0.5;
+
 }
 
 // =================================
