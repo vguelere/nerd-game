@@ -6,7 +6,8 @@ import {
   AnimatedSprite,
   Spritesheet,
   Texture,
-  Rectangle
+  Rectangle,
+  Sprite
 } from 'pixi.js';
 
 import { Player } from './Player';
@@ -22,44 +23,96 @@ await app.init({
 document.body.appendChild(app.canvas);
 
 // =================================
-// CONFIGURAÇÕES
+// CONFIGURAÇÕES DO MAPA
 // =================================
 
-const WORLD_LEFT = -2000;
-const WORLD_RIGHT = 3000;
+// Cada parte do mapa tem 2048px de largura.
+// Duas partes formam um mundo contínuo de 4096px.
+const WORLD_LEFT = 0;
+const WORLD_RIGHT = 4096;
+const WORLD_WIDTH = WORLD_RIGHT - WORLD_LEFT;
 
-const WORLD_WIDTH =
-  WORLD_RIGHT - WORLD_LEFT;
-
-const GROUND_Y = 660;
+const GROUND_Y = 680;
 
 // =================================
-// MUNDO
+// CAMADAS
 // =================================
 
+const backgroundLayer = new Container();
+const cityLayer = new Container();
 const world = new Container();
 
+app.stage.addChild(backgroundLayer);
+app.stage.addChild(cityLayer);
 app.stage.addChild(world);
 
 // =================================
-// CHÃO
+// MAPA - FUNDO
 // =================================
 
-const ground = new Graphics();
+const backgroundTexture =
+  await Assets.load<Texture>('/assets/map/background.png');
 
-ground.rect(
-  0,
-  0,
-  WORLD_WIDTH,
-  300
-);
+const backgroundTexture2 =
+  await Assets.load<Texture>('/assets/map/background-2.png');
 
-ground.fill('#5c4033');
+const background = new Sprite(backgroundTexture);
+background.x = 0;
+background.y = 0;
 
-ground.x = WORLD_LEFT;
-ground.y = GROUND_Y;
+const background2 = new Sprite(backgroundTexture2);
+background2.x = 2048;
+background2.y = 0;
 
-world.addChild(ground);
+backgroundLayer.addChild(background);
+backgroundLayer.addChild(background2);
+
+// =================================
+// MAPA - CIDADE
+// =================================
+
+const cityTexture =
+  await Assets.load<Texture>('/assets/map/city.png');
+
+const cityTexture2 =
+  await Assets.load<Texture>('/assets/map/city-2.png');
+
+const city = new Sprite(cityTexture);
+city.x = 0;
+city.y = 0;
+
+const city2 = new Sprite(cityTexture2);
+city2.x = 2048;
+city2.y = 0;
+
+cityLayer.addChild(city);
+cityLayer.addChild(city2);
+
+// =================================
+// MAPA - PISTA
+// =================================
+
+const roadTexture =
+  await Assets.load<Texture>('/assets/map/road.png');
+
+const roadTexture2 =
+  await Assets.load<Texture>('/assets/map/road-2.png');
+
+const road = new Sprite(roadTexture);
+road.x = 0;
+road.y = 0;
+
+const road2 = new Sprite(roadTexture2);
+road2.x = 2048;
+
+// road-2.png tem 492px de altura e representa
+// a continuação da pista. Alinhamos o piso com o
+// final da primeira parte.
+road2.y = 188;
+
+// As duas partes formam uma pista contínua.
+world.addChild(road);
+world.addChild(road2);
 
 // =================================
 // PLATAFORMAS
@@ -71,7 +124,6 @@ function createPlatform(
   width: number,
   height: number
 ) {
-
   const platform = new Graphics();
 
   platform.rect(
@@ -92,42 +144,10 @@ function createPlatform(
 }
 
 const platforms = [
-
-  createPlatform(
-    350,
-    520,
-    200,
-    30
-  ),
-
-  createPlatform(
-    800,
-    450,
-    200,
-    30
-  ),
-
-  createPlatform(
-    1300,
-    520,
-    250,
-    30
-  ),
-
-  createPlatform(
-    1900,
-    430,
-    200,
-    30
-  ),
-
-  createPlatform(
-    2400,
-    500,
-    300,
-    30
-  ),
-
+  createPlatform(350, 520, 200, 30),
+  createPlatform(800, 450, 200, 30),
+  createPlatform(1300, 520, 250, 30),
+  createPlatform(1650, 430, 200, 30),
 ];
 
 // =================================
@@ -136,10 +156,11 @@ const platforms = [
 
 const player = new Player();
 
-player.x = -700;
-player.y = 50;
+player.x = 250;
+player.y = GROUND_Y - player.height;
 
-// Player é apenas a hitbox
+// Player é apenas a hitbox.
+// A Olivia será desenhada por cima.
 player.visible = false;
 
 world.addChild(player);
@@ -166,24 +187,40 @@ let oliviaAnimation:
 
 try {
 
-  try {
-  const jumpSheet = await Assets.load<Spritesheet>({
-    alias: 'oliviaJump',
-    src: '/assets/player/olivia-jump.json'
-  });
+  // =================================
+  // JUMP - JSON
+  // =================================
 
-  for (let i = 1; i <= 8; i++) {
-    const frameName = `jump_${String(i).padStart(2, '0')}.png`;
-    const texture = jumpSheet.textures[frameName];
-    if (!texture) {
-      console.error('Frame Jump não encontrado:', frameName);
-      continue;
+  try {
+    const jumpSheet = await Assets.load<Spritesheet>({
+      alias: 'oliviaJump',
+      src: '/assets/player/olivia-jump.json'
+    });
+
+    for (let i = 1; i <= 8; i++) {
+      const frameName =
+        `jump_${String(i).padStart(2, '0')}.png`;
+
+      const texture =
+        jumpSheet.textures[frameName];
+
+      if (!texture) {
+        console.error(
+          'Frame Jump não encontrado:',
+          frameName
+        );
+        continue;
+      }
+
+      oliviaJumpTextures.push(texture);
     }
-    oliviaJumpTextures.push(texture);
+
+  } catch (error) {
+    console.warn(
+      'Jump JSON indisponível, seguindo para jump-2:',
+      error
+    );
   }
-} catch (error) {
-  console.warn('Jump indisponível, seguindo sem ele:', error);
-}
 
   // =================================
   // IDLE
@@ -200,11 +237,7 @@ try {
     idleSheet
   );
 
-  for (
-    let i = 1;
-    i <= 22;
-    i++
-  ) {
+  for (let i = 1; i <= 22; i++) {
 
     const frameName =
       `idle_${String(i).padStart(2, '0')}.png`;
@@ -213,12 +246,10 @@ try {
       idleSheet.textures[frameName];
 
     if (!texture) {
-
       console.error(
         'Frame Idle não encontrado:',
         frameName
       );
-
       continue;
     }
 
@@ -245,11 +276,7 @@ try {
     walkSheet
   );
 
-  for (
-    let i = 1;
-    i <= 23;
-    i++
-  ) {
+  for (let i = 1; i <= 23; i++) {
 
     const frameName =
       `walk_${String(i).padStart(2, '0')}.png`;
@@ -258,12 +285,10 @@ try {
       walkSheet.textures[frameName];
 
     if (!texture) {
-
       console.error(
         'Frame Walk não encontrado:',
         frameName
       );
-
       continue;
     }
 
@@ -275,58 +300,59 @@ try {
     oliviaWalkTextures.length
   );
 
-
-  /**/
-
   // =================================
-// JUMP
-// =================================
+  // JUMP-2
+  // =================================
 
-// =================================
-// JUMP
-// =================================
+  if (oliviaJumpTextures.length === 0) {
 
-try {
+    try {
 
-  const jumpBase =
-    await Assets.load<Texture>(
-      '/assets/player/olivia-jump-2.png'
-    );
+      const jumpBase =
+        await Assets.load<Texture>(
+          '/assets/player/olivia-jump-2.png'
+        );
 
-  // Células de 200x200: [x, y] do canto superior esquerdo
-  const jumpFrames = [
-  [0, 4],     // 1: agachar (preparação)
-  [200, 4],   // 2: agachar inclinada
-  [400, 4],   // 3: impulso / subida
-  [600, 4],   // 4: pico do pulo
-  [800, 4],   // 5: pernas esticadas (caindo)
+      // Células de 200x200.
+      // O spritesheet atual usa 5 frames.
+      const jumpFrames = [
+        [0, 4],
+        [200, 4],
+        [400, 4],
+        [600, 4],
+        [800, 4],
+      ];
 
-];
+      for (const [x, y] of jumpFrames) {
 
-  for (const [x, y] of jumpFrames) {
+        oliviaJumpTextures.push(
+          new Texture({
+            source: jumpBase.source,
+            frame: new Rectangle(
+              x,
+              y,
+              200,
+              200
+            )
+          })
+        );
 
-    oliviaJumpTextures.push(
-      new Texture({
-        source: jumpBase.source,
-        frame: new Rectangle(x, y, 200, 200)
-      })
-    );
+      }
 
+      console.log(
+        'Frames Jump:',
+        oliviaJumpTextures.length
+      );
+
+    } catch (error) {
+
+      console.warn(
+        'Jump indisponível:',
+        error
+      );
+
+    }
   }
-
-  console.log(
-    'Frames Jump:',
-    oliviaJumpTextures.length
-  );
-
-} catch (error) {
-
-  console.warn(
-    'Jump indisponível:',
-    error
-  );
-
-}
 
   // =================================
   // CRIAR OLIVIA
@@ -342,23 +368,19 @@ try {
         oliviaIdleTextures
       );
 
-    // Velocidade da animação
     olivia.animationSpeed = 0.5;
-
     olivia.loop = true;
 
-    // Tamanho da Olivia
+    // Cada frame visual ocupa 200x200.
     olivia.width = 200;
     olivia.height = 200;
 
-    // Centro horizontal
-    // Pés na posição Y
+    // Centro horizontal.
+    // Os pés ficam exatamente no player.
     olivia.anchor.set(
       0.5,
-      1  
+      1
     );
-
-    
 
     world.addChild(olivia);
 
@@ -384,10 +406,6 @@ try {
   );
 
 }
-
-
-
-
 
 // =================================
 // INIMIGO
@@ -416,7 +434,7 @@ gate.rect(
 
 gate.fill('#333333');
 
-gate.x = 2800;
+gate.x = 3900;
 gate.y = 500;
 
 world.addChild(gate);
@@ -425,30 +443,23 @@ world.addChild(gate);
 // CONTROLES
 // =================================
 
-const keys: Record<
-  string,
-  boolean
-> = {};
+const keys: Record<string, boolean> = {};
 
 window.addEventListener(
   'keydown',
   (event) => {
-
     keys[
       event.key.toLowerCase()
     ] = true;
-
   }
 );
 
 window.addEventListener(
   'keyup',
   (event) => {
-
     keys[
       event.key.toLowerCase()
     ] = false;
-
   }
 );
 
@@ -529,7 +540,7 @@ function checkPlatformCollision(
 
   const wasAbove =
     previousY + player.height <=
-    platformTop;
+      platformTop;
 
   const crossedPlatform =
     playerBottom >= platformTop;
@@ -570,6 +581,47 @@ function checkEnemyCollision(
 }
 
 // =================================
+// CÂMERA
+// =================================
+
+function updateCamera() {
+
+  const screenCenter =
+    app.screen.width / 2;
+
+  let cameraX =
+    screenCenter -
+    player.x -
+    player.width / 2;
+
+  const minCameraX =
+    app.screen.width -
+    WORLD_RIGHT;
+
+  const maxCameraX =
+    -WORLD_LEFT;
+
+  cameraX =
+    Math.min(
+      maxCameraX,
+      Math.max(
+        minCameraX,
+        cameraX
+      )
+    );
+
+  // Pista, player e objetos.
+  world.x = cameraX;
+
+  // Parallax:
+  // cidade anda mais devagar que a pista.
+  city.x = cameraX * 0.5;
+
+  // Fundo anda ainda mais devagar.
+  background.x = cameraX * 0.2;
+}
+
+// =================================
 // GAME LOOP
 // =================================
 
@@ -598,66 +650,108 @@ app.ticker.add(() => {
     keys['arrowright'];
 
   if (movingLeft) {
-
     player.moveLeft();
-
   }
 
   if (movingRight) {
-
     player.moveRight();
-
   }
 
-// =================================
-// ANIMAÇÃO DA OLIVIA
-// =================================
+  // =================================
+  // ANIMAÇÃO DA OLIVIA
+  // =================================
 
-if (olivia) {
+  if (olivia) {
 
-  const isMoving = movingLeft || movingRight;
-  const isJumping = !player.onGround;
+    const isMoving =
+      movingLeft ||
+      movingRight;
 
-  let desired: 'idle' | 'walk' | 'jump' = 'idle';
+    const isJumping =
+      !player.onGround;
 
-  if (isJumping && oliviaJumpTextures.length > 0) {
-    desired = 'jump';
-  } else if (isMoving) {
-    desired = 'walk';
-  }
+    let desired:
+      'idle' |
+      'walk' |
+      'jump' = 'idle';
 
-  if (desired !== oliviaAnimation) {
+    if (
+      isJumping &&
+      oliviaJumpTextures.length > 0
+    ) {
 
-    oliviaAnimation = desired;
+      desired = 'jump';
 
-    if (desired === 'jump') {
-      olivia.textures = oliviaJumpTextures;
-      olivia.animationSpeed = 0.3;
-      olivia.loop = false;
-    } else if (desired === 'walk') {
-      olivia.textures = oliviaWalkTextures;
-      olivia.animationSpeed = 0.5;
-      olivia.loop = true;
-    } else {
-      olivia.textures = oliviaIdleTextures;
-      olivia.animationSpeed = 0.15;
-      olivia.loop = true;
+    } else if (isMoving) {
+
+      desired = 'walk';
+
     }
 
-    olivia.gotoAndPlay(0);
+    if (
+      desired !== oliviaAnimation
+    ) {
+
+      oliviaAnimation =
+        desired;
+
+      if (
+        desired === 'jump'
+      ) {
+
+        olivia.textures =
+          oliviaJumpTextures;
+
+        olivia.animationSpeed =
+          0.3;
+
+        olivia.loop =
+          false;
+
+      } else if (
+        desired === 'walk'
+      ) {
+
+        olivia.textures =
+          oliviaWalkTextures;
+
+        olivia.animationSpeed =
+          0.5;
+
+        olivia.loop =
+          true;
+
+      } else {
+
+        olivia.textures =
+          oliviaIdleTextures;
+
+        olivia.animationSpeed =
+          0.15;
+
+        olivia.loop =
+          true;
+      }
+
+      olivia.gotoAndPlay(0);
+    }
+
+    // Direção
+    if (movingLeft) {
+      olivia.scale.x =
+        -Math.abs(
+          olivia.scale.x
+        );
+    }
+
+    if (movingRight) {
+      olivia.scale.x =
+        Math.abs(
+          olivia.scale.x
+        );
+    }
   }
 
-  // Direção
-  if (movingLeft) {
-    olivia.scale.x = -Math.abs(olivia.scale.x);
-  }
-
-  if (movingRight) {
-    olivia.scale.x = Math.abs(olivia.scale.x);
-  }
-}
-
-    
   // =================================
   // COLISÃO LATERAL
   // =================================
@@ -675,9 +769,9 @@ if (olivia) {
     ) {
 
       // Player vindo pela esquerda
-
       if (
-        previousX + player.width <=
+        previousX +
+          player.width <=
         platform.x
       ) {
 
@@ -688,21 +782,17 @@ if (olivia) {
       }
 
       // Player vindo pela direita
-
       else if (
         previousX >=
         platform.x +
-        platform.width
+          platform.width
       ) {
 
         player.x =
           platform.x +
           platform.width;
-
       }
-
     }
-
   }
 
   // =================================
@@ -711,14 +801,16 @@ if (olivia) {
 
   player.applyGravity();
 
-  player.onGround = false;
+  player.onGround =
+    false;
 
   // =================================
-  // CHÃO
+  // CHÃO DA PISTA
   // =================================
 
   if (
-    player.y + player.height >=
+    player.y +
+      player.height >=
     GROUND_Y
   ) {
 
@@ -726,10 +818,11 @@ if (olivia) {
       GROUND_Y -
       player.height;
 
-    player.velocityY = 0;
+    player.velocityY =
+      0;
 
-    player.onGround = true;
-
+    player.onGround =
+      true;
   }
 
   // =================================
@@ -752,12 +845,12 @@ if (olivia) {
         platform.y -
         player.height;
 
-      player.velocityY = 0;
+      player.velocityY =
+        0;
 
-      player.onGround = true;
-
+      player.onGround =
+        true;
     }
-
   }
 
   // =================================
@@ -771,7 +864,6 @@ if (olivia) {
   ) {
 
     player.jump();
-
   }
 
   // =================================
@@ -796,7 +888,6 @@ if (olivia) {
     console.log(
       `Vida: ${player.health}/${player.maxHealth}`
     );
-
   }
 
   // =================================
@@ -804,23 +895,23 @@ if (olivia) {
   // =================================
 
   if (
-    player.x < WORLD_LEFT
+    player.x <
+    WORLD_LEFT
   ) {
 
     player.x =
       WORLD_LEFT;
-
   }
 
   if (
-    player.x + player.width >
+    player.x +
+      player.width >
     WORLD_RIGHT
   ) {
 
     player.x =
       WORLD_RIGHT -
       player.width;
-
   }
 
   // =================================
@@ -837,37 +928,12 @@ if (olivia) {
       player.y +
       player.height -
       5;
-
   }
 
   // =================================
   // CÂMERA
   // =================================
 
-  const screenCenter =
-    app.screen.width / 2;
-
-  let cameraX =
-    screenCenter -
-    player.x;
-
-  const minCameraX =
-    app.screen.width -
-    WORLD_RIGHT;
-
-  const maxCameraX =
-    -WORLD_LEFT;
-
-  cameraX =
-    Math.min(
-      maxCameraX,
-      Math.max(
-        minCameraX,
-        cameraX
-      )
-    );
-
-  world.x =
-    cameraX;
+  updateCamera();
 
 });
