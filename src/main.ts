@@ -28,9 +28,13 @@ document.body.appendChild(app.canvas);
 
 // Cada parte do mapa tem 2048px de largura.
 // Duas partes formam um mundo contínuo de 4096px.
+const ROAD_WIDTH = 3240;
+
 const WORLD_LEFT = 0;
-const WORLD_RIGHT = 4096;
-const WORLD_WIDTH = WORLD_RIGHT - WORLD_LEFT;
+const WORLD_RIGHT = ROAD_WIDTH * 2;
+
+const WORLD_WIDTH =
+  WORLD_RIGHT - WORLD_LEFT;
 
 const GROUND_Y = 680;
 
@@ -51,38 +55,59 @@ app.stage.addChild(world);
 // =================================
 
 const backgroundTexture =
-  await Assets.load<Texture>('/assets/map/background.png');
+  await Assets.load<Texture>(
+    '/assets/map/background.png'
+  );
 
 const backgroundTexture2 =
-  await Assets.load<Texture>('/assets/map/background-2.png');
+  await Assets.load<Texture>(
+    '/assets/map/background-2.png'
+  );
 
-const background = new Sprite(backgroundTexture);
+const background =
+  new Sprite(backgroundTexture);
+
+const background2 =
+  new Sprite(backgroundTexture2);
+
+// Parte 1
 background.x = 0;
 background.y = 0;
 
-const background2 = new Sprite(backgroundTexture2);
-background2.x = 2048;
+// Parte 2
+background2.x = 4492;
 background2.y = 0;
 
 backgroundLayer.addChild(background);
 backgroundLayer.addChild(background2);
+
 
 // =================================
 // MAPA - CIDADE
 // =================================
 
 const cityTexture =
-  await Assets.load<Texture>('/assets/map/city.png');
+  await Assets.load<Texture>(
+    '/assets/map/city.png'
+  );
 
 const cityTexture2 =
-  await Assets.load<Texture>('/assets/map/city-2.png');
+  await Assets.load<Texture>(
+    '/assets/map/city-2.png'
+  );
 
-const city = new Sprite(cityTexture);
+const city =
+  new Sprite(cityTexture);
+
+const city2 =
+  new Sprite(cityTexture2);
+
+// Parte 1
 city.x = 0;
 city.y = 0;
 
-const city2 = new Sprite(cityTexture2);
-city2.x = 2048;
+// Parte 2
+city2.x = 4492;
 city2.y = 0;
 
 cityLayer.addChild(city);
@@ -93,24 +118,32 @@ cityLayer.addChild(city2);
 // =================================
 
 const roadTexture =
-  await Assets.load<Texture>('/assets/map/road.png');
+  await Assets.load<Texture>(
+    '/assets/map/road.png'
+  );
 
 const roadTexture2 =
-  await Assets.load<Texture>('/assets/map/road-2.png');
+  await Assets.load<Texture>(
+    '/assets/map/road-2.png'
+  );
 
-const road = new Sprite(roadTexture);
+const road =
+  new Sprite(roadTexture);
+
+const road2 =
+  new Sprite(roadTexture2);
+
+// Parte 1
 road.x = 0;
 road.y = 0;
 
-const road2 = new Sprite(roadTexture2);
-road2.x = 2048;
+// Parte 2
+road2.x = ROAD_WIDTH;
+road2.y = 0;
 
-// road-2.png tem 492px de altura e representa
-// a continuação da pista. Alinhamos o piso com o
-// final da primeira parte.
-road2.y = 188;
-
-// As duas partes formam uma pista contínua.
+// As duas pistas têm exatamente
+// 3240 × 1080.
+// Não redimensionar.
 world.addChild(road);
 world.addChild(road2);
 
