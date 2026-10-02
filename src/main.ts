@@ -4,7 +4,9 @@ import {
   Graphics,
   Assets,
   AnimatedSprite,
-  Spritesheet
+  Spritesheet,
+  Texture,
+  Rectangle
 } from 'pixi.js';
 
 import { Player } from './Player';
@@ -143,23 +145,45 @@ player.visible = false;
 world.addChild(player);
 
 // =================================
-// ALICIA
+// OLIVIA
 // =================================
 
-let alicia: AnimatedSprite | null = null;
+let olivia: AnimatedSprite | null = null;
 
-let aliciaIdleTextures: any[] = [];
-let aliciaWalkTextures: any[] = [];
+const oliviaIdleTextures: Texture[] = [];
+const oliviaIdleLeftTextures: Texture[] = [];
+const oliviaWalkTextures: Texture[] = [];
+const oliviaJumpTextures: Texture[] = [];
 
-let aliciaAnimation:
+let oliviaAnimation:
   | 'idle'
-  | 'walk' = 'idle';
+  | 'walk'
+  | 'jump' = 'idle';
 
 // =================================
-// CARREGAR ALICIA
+// CARREGAR OLIVIA
 // =================================
 
 try {
+
+  try {
+  const jumpSheet = await Assets.load<Spritesheet>({
+    alias: 'oliviaJump',
+    src: '/assets/player/olivia-jump.json'
+  });
+
+  for (let i = 1; i <= 8; i++) {
+    const frameName = `jump_${String(i).padStart(2, '0')}.png`;
+    const texture = jumpSheet.textures[frameName];
+    if (!texture) {
+      console.error('Frame Jump não encontrado:', frameName);
+      continue;
+    }
+    oliviaJumpTextures.push(texture);
+  }
+} catch (error) {
+  console.warn('Jump indisponível, seguindo sem ele:', error);
+}
 
   // =================================
   // IDLE
@@ -167,8 +191,8 @@ try {
 
   const idleSheet =
     await Assets.load<Spritesheet>({
-      alias: 'aliciaIdle',
-      src: '/assets/player/alicia-idle.json'
+      alias: 'oliviaIdle',
+      src: '/assets/player/olivia-idle.json'
     });
 
   console.log(
@@ -198,12 +222,12 @@ try {
       continue;
     }
 
-    aliciaIdleTextures.push(texture);
+    oliviaIdleTextures.push(texture);
   }
 
   console.log(
     'Frames Idle:',
-    aliciaIdleTextures.length
+    oliviaIdleTextures.length
   );
 
   // =================================
@@ -212,8 +236,8 @@ try {
 
   const walkSheet =
     await Assets.load<Spritesheet>({
-      alias: 'aliciaWalk',
-      src: '/assets/player/alicia-walk.json'
+      alias: 'oliviaWalk',
+      src: '/assets/player/olivia-walk.json'
     });
 
   console.log(
@@ -243,58 +267,111 @@ try {
       continue;
     }
 
-    aliciaWalkTextures.push(texture);
+    oliviaWalkTextures.push(texture);
   }
 
   console.log(
     'Frames Walk:',
-    aliciaWalkTextures.length
+    oliviaWalkTextures.length
   );
 
+
+  /**/
+
   // =================================
-  // CRIAR ALICIA
+// JUMP
+// =================================
+
+// =================================
+// JUMP
+// =================================
+
+try {
+
+  const jumpBase =
+    await Assets.load<Texture>(
+      '/assets/player/olivia-jump-2.png'
+    );
+
+  // Células de 200x200: [x, y] do canto superior esquerdo
+  const jumpFrames = [
+  [0, 4],     // 1: agachar (preparação)
+  [200, 4],   // 2: agachar inclinada
+  [400, 4],   // 3: impulso / subida
+  [600, 4],   // 4: pico do pulo
+  [800, 4],   // 5: pernas esticadas (caindo)
+
+];
+
+  for (const [x, y] of jumpFrames) {
+
+    oliviaJumpTextures.push(
+      new Texture({
+        source: jumpBase.source,
+        frame: new Rectangle(x, y, 200, 200)
+      })
+    );
+
+  }
+
+  console.log(
+    'Frames Jump:',
+    oliviaJumpTextures.length
+  );
+
+} catch (error) {
+
+  console.warn(
+    'Jump indisponível:',
+    error
+  );
+
+}
+
+  // =================================
+  // CRIAR OLIVIA
   // =================================
 
   if (
-    aliciaIdleTextures.length > 0 &&
-    aliciaWalkTextures.length > 0
+    oliviaIdleTextures.length > 0 &&
+    oliviaWalkTextures.length > 0
   ) {
 
-    alicia =
+    olivia =
       new AnimatedSprite(
-        aliciaIdleTextures
+        oliviaIdleTextures
       );
 
     // Velocidade da animação
-    alicia.animationSpeed = 0.5;
+    olivia.animationSpeed = 0.5;
 
-    alicia.loop = true;
+    olivia.loop = true;
 
-    // Tamanho da Alicia
-    alicia.width = 256;
-    alicia.height = 256;
+    // Tamanho da Olivia
+    olivia.width = 200;
+    olivia.height = 200;
 
     // Centro horizontal
     // Pés na posição Y
-    alicia.anchor.set(
+    olivia.anchor.set(
       0.5,
       1  
     );
 
     
 
-    world.addChild(alicia);
+    world.addChild(olivia);
 
-    alicia.play();
+    olivia.play();
 
     console.log(
-      'Alicia criada com sucesso!'
+      'Olivia criada com sucesso!'
     );
 
   } else {
 
     console.error(
-      'Não foi possível criar a Alicia.'
+      'Não foi possível criar a Olivia.'
     );
 
   }
@@ -302,11 +379,15 @@ try {
 } catch (error) {
 
   console.error(
-    'ERRO AO CARREGAR ALICIA:',
+    'ERRO AO CARREGAR OLIVIA:',
     error
   );
 
 }
+
+
+
+
 
 // =================================
 // INIMIGO
@@ -528,84 +609,55 @@ app.ticker.add(() => {
 
   }
 
-  // =================================
-  // ANIMAÇÃO DA ALICIA
-  // =================================
+// =================================
+// ANIMAÇÃO DA OLIVIA
+// =================================
 
-  if (alicia) {
+if (olivia) {
 
-    const isMoving =
-      movingLeft ||
-      movingRight;
+  const isMoving = movingLeft || movingRight;
+  const isJumping = !player.onGround;
 
-    // =================================
-    // WALK
-    // =================================
+  let desired: 'idle' | 'walk' | 'jump' = 'idle';
 
-    if (
-      isMoving &&
-      aliciaAnimation !== 'walk'
-    ) {
-
-      alicia.textures =
-        aliciaWalkTextures;
-
-      alicia.animationSpeed =
-        0.5;
-
-      aliciaAnimation =
-        'walk';
-
-      alicia.play();
-
-    }
-
-    // =================================
-    // IDLE
-    // =================================
-
-    if (
-      !isMoving &&
-      aliciaAnimation !== 'idle'
-    ) {
-
-      alicia.textures =
-        aliciaIdleTextures;
-
-      alicia.animationSpeed =
-        0.15;
-
-      aliciaAnimation =
-        'idle';
-
-      alicia.play();
-
-    }
-
-    // =================================
-    // DIREÇÃO
-    // =================================
-
-    if (movingLeft) {
-
-      alicia.scale.x =
-        -Math.abs(
-          alicia.scale.x
-        );
-
-    }
-
-    if (movingRight) {
-
-      alicia.scale.x =
-        Math.abs(
-          alicia.scale.x
-        );
-
-    }
-
+  if (isJumping && oliviaJumpTextures.length > 0) {
+    desired = 'jump';
+  } else if (isMoving) {
+    desired = 'walk';
   }
 
+  if (desired !== oliviaAnimation) {
+
+    oliviaAnimation = desired;
+
+    if (desired === 'jump') {
+      olivia.textures = oliviaJumpTextures;
+      olivia.animationSpeed = 0.3;
+      olivia.loop = false;
+    } else if (desired === 'walk') {
+      olivia.textures = oliviaWalkTextures;
+      olivia.animationSpeed = 0.5;
+      olivia.loop = true;
+    } else {
+      olivia.textures = oliviaIdleTextures;
+      olivia.animationSpeed = 0.15;
+      olivia.loop = true;
+    }
+
+    olivia.gotoAndPlay(0);
+  }
+
+  // Direção
+  if (movingLeft) {
+    olivia.scale.x = -Math.abs(olivia.scale.x);
+  }
+
+  if (movingRight) {
+    olivia.scale.x = Math.abs(olivia.scale.x);
+  }
+}
+
+    
   // =================================
   // COLISÃO LATERAL
   // =================================
@@ -772,16 +824,16 @@ app.ticker.add(() => {
   }
 
   // =================================
-  // ALICIA SEGUE O PLAYER
+  // OLIVIA SEGUE O PLAYER
   // =================================
 
-  if (alicia) {
+  if (olivia) {
 
-    alicia.x =
+    olivia.x =
       player.x +
       player.width / 2;
 
-    alicia.y =
+    olivia.y =
       player.y +
       player.height -
       5;
