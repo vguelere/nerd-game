@@ -28,7 +28,7 @@ document.body.appendChild(app.canvas);
 
 // Cada parte do mapa tem 2048px de largura.
 // Duas partes formam um mundo contínuo de 4096px.
-const ROAD_WIDTH = 3240;
+const ROAD_WIDTH = 3040;
 
 const WORLD_LEFT = 0;
 const WORLD_RIGHT = ROAD_WIDTH * 2;
@@ -117,6 +117,10 @@ cityLayer.addChild(city2);
 // MAPA - PISTA
 // =================================
 
+// =================================
+// MAPA - PISTA
+// =================================
+
 const roadTexture =
   await Assets.load<Texture>(
     '/assets/map/road.png'
@@ -127,25 +131,43 @@ const roadTexture2 =
     '/assets/map/road-2.png'
   );
 
-const road =
-  new Sprite(roadTexture);
+console.log(
+  'ROAD 1:',
+  roadTexture.width,
+  roadTexture.height
+);
 
-const road2 =
-  new Sprite(roadTexture2);
+console.log(
+  'ROAD 2:',
+  roadTexture2.width,
+  roadTexture2.height
+);
 
-// Parte 1
+const road = new Sprite(
+  roadTexture
+);
+
 road.x = 0;
 road.y = 0;
 
-// Parte 2
-road2.x = ROAD_WIDTH;
-road2.y = 0;
+const road2 = new Sprite(
+  roadTexture2
+);
 
-// As duas pistas têm exatamente
-// 3240 × 1080.
-// Não redimensionar.
+road2.x = 3240;
+
+// Alinha a parte inferior da segunda pista
+// exatamente com o chão do jogo.
+road2.y = 40;
+
 world.addChild(road);
 world.addChild(road2);
+
+console.log(
+  'ROAD 2 POSIÇÃO:',
+  road2.x,
+  road2.y
+);
 
 // =================================
 // PLATAFORMAS
