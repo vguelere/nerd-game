@@ -218,7 +218,7 @@ const city2 =
 
 // Parte 1
 city.x = 0;
-city.y = 0;
+city.y = -120;
 
 // Parte 2
 city2.x = 4492;
@@ -340,15 +340,24 @@ world.addChild(player);
 
 let olivia: AnimatedSprite | null = null;
 
-const oliviaIdleTextures: Texture[] = [];
-const oliviaIdleLeftTextures: Texture[] = [];
-const oliviaWalkTextures: Texture[] = [];
-const oliviaJumpTextures: Texture[] = [];
+const oliviaAnimations: Record<
+  'idle' | 'walk' | 'jump' | 'attack',
+  Texture[]
+> = {
+  idle: [],
+  walk: [],
+  jump: [],
+  attack: []
+};
 
 let oliviaAnimation:
   | 'idle'
   | 'walk'
-  | 'jump' = 'idle';
+  | 'jump'
+  | 'attack' = 'idle';
+
+let oliviaAttackTimer = 0;
+let oliviaFacing = 1;
 
 // =================================
 // CARREGAR OLIVIA
@@ -356,216 +365,63 @@ let oliviaAnimation:
 
 try {
 
-  // =================================
-  // JUMP - JSON
-  // =================================
-
-  try {
-    const jumpSheet = await Assets.load<Spritesheet>({
-      alias: 'oliviaJump',
-      src: '/assets/player/olivia-jump.json'
-    });
-
-    for (let i = 1; i <= 8; i++) {
-      const frameName =
-        `jump_${String(i).padStart(2, '0')}.png`;
-
-      const texture =
-        jumpSheet.textures[frameName];
-
-      if (!texture) {
-        console.error(
-          'Frame Jump não encontrado:',
-          frameName
-        );
-        continue;
-      }
-
-      oliviaJumpTextures.push(texture);
-    }
-
-  } catch (error) {
-    console.warn(
-      'Jump JSON indisponível, seguindo para jump-2:',
-      error
+  const oliviaBase =
+    await Assets.load<Texture>(
+      '/assets/player/olivia/spritesheet.png'
     );
-  }
 
-  // =================================
-  // IDLE
-  // =================================
+  const FRAME_WIDTH = 200;
+  const FRAME_HEIGHT = 200;
 
-  const idleSheet =
-    await Assets.load<Spritesheet>({
-      alias: 'oliviaIdle',
-      src: '/assets/player/olivia-idle.json'
-    });
+  const animationRows = {
+    idle: 0,
+    walk: 1,
+    jump: 2,
+    attack: 3
+  } as const;
 
-  console.log(
-    'Idle carregado:',
-    idleSheet
-  );
+  for (const [name, row] of Object.entries(animationRows)) {
 
-  for (let i = 1; i <= 22; i++) {
+    const key =
+      name as keyof typeof animationRows;
 
-    const frameName =
-      `idle_${String(i).padStart(2, '0')}.png`;
+    for (let i = 0; i < 4; i++) {
 
-    const texture =
-      idleSheet.textures[frameName];
-
-    if (!texture) {
-      console.error(
-        'Frame Idle não encontrado:',
-        frameName
+      oliviaAnimations[key].push(
+        new Texture({
+          source: oliviaBase.source,
+          frame: new Rectangle(
+            i * FRAME_WIDTH,
+            row * FRAME_HEIGHT,
+            FRAME_WIDTH,
+            FRAME_HEIGHT
+          )
+        })
       );
-      continue;
-    }
-
-    oliviaIdleTextures.push(texture);
-  }
-
-  console.log(
-    'Frames Idle:',
-    oliviaIdleTextures.length
-  );
-
-  // =================================
-  // WALK
-  // =================================
-
-  const walkSheet =
-    await Assets.load<Spritesheet>({
-      alias: 'oliviaWalk',
-      src: '/assets/player/olivia-walk.json'
-    });
-
-  console.log(
-    'Walk carregado:',
-    walkSheet
-  );
-
-  for (let i = 1; i <= 23; i++) {
-
-    const frameName =
-      `walk_${String(i).padStart(2, '0')}.png`;
-
-    const texture =
-      walkSheet.textures[frameName];
-
-    if (!texture) {
-      console.error(
-        'Frame Walk não encontrado:',
-        frameName
-      );
-      continue;
-    }
-
-    oliviaWalkTextures.push(texture);
-  }
-
-  console.log(
-    'Frames Walk:',
-    oliviaWalkTextures.length
-  );
-
-  // =================================
-  // JUMP-2
-  // =================================
-
-  if (oliviaJumpTextures.length === 0) {
-
-    try {
-
-      const jumpBase =
-        await Assets.load<Texture>(
-          '/assets/player/olivia-jump-2.png'
-        );
-
-      // Células de 200x200.
-      // O spritesheet atual usa 5 frames.
-      const jumpFrames = [
-        [0, 4],
-        [200, 4],
-        [400, 4],
-        [600, 4],
-        [800, 4],
-      ];
-
-      for (const [x, y] of jumpFrames) {
-
-        oliviaJumpTextures.push(
-          new Texture({
-            source: jumpBase.source,
-            frame: new Rectangle(
-              x,
-              y,
-              200,
-              200
-            )
-          })
-        );
-
-      }
-
-      console.log(
-        'Frames Jump:',
-        oliviaJumpTextures.length
-      );
-
-    } catch (error) {
-
-      console.warn(
-        'Jump indisponível:',
-        error
-      );
-
     }
   }
 
-  // =================================
-  // CRIAR OLIVIA
-  // =================================
-
-  if (
-    oliviaIdleTextures.length > 0 &&
-    oliviaWalkTextures.length > 0
-  ) {
-
-    olivia =
-      new AnimatedSprite(
-        oliviaIdleTextures
-      );
-
-    olivia.animationSpeed = 0.5;
-    olivia.loop = true;
-
-    // Cada frame visual ocupa 200x200.
-    olivia.width = 200;
-    olivia.height = 200;
-
-    // Centro horizontal.
-    // Os pés ficam exatamente no player.
-    olivia.anchor.set(
-      0.5,
-      1
+  olivia =
+    new AnimatedSprite(
+      oliviaAnimations.idle
     );
 
-    world.addChild(olivia);
+  olivia.width = 200;
+  olivia.height = 200;
 
-    olivia.play();
+  // O ponto de origem fica nos pés.
+  olivia.anchor.set(0.5, 1);
 
-    console.log(
-      'Olivia criada com sucesso!'
-    );
+  olivia.animationSpeed = 4 / 60;
+  olivia.loop = true;
 
-  } else {
+  world.addChild(olivia);
 
-    console.error(
-      'Não foi possível criar a Olivia.'
-    );
+  olivia.play();
 
-  }
+  console.log(
+    'Olivia criada com sucesso!'
+  );
 
 } catch (error) {
 
@@ -631,6 +487,29 @@ window.addEventListener(
     ] = false;
   }
 );
+
+//
+// ataque com o teclado
+//
+
+let mouseAttack = false;
+
+window.addEventListener('mousedown', (event) => {
+
+  if (event.button === 0) {
+    mouseAttack = true;
+  }
+
+});
+
+window.addEventListener('mouseup', (event) => {
+
+  if (event.button === 0) {
+    mouseAttack = false;
+  }
+
+});
+
 
 // =================================
 // COLISÃO LATERAL
@@ -843,89 +722,117 @@ app.ticker.add(() => {
       movingLeft ||
       movingRight;
 
-    const isJumping =
-      !player.onGround;
+      const attackPressed = mouseAttack;
 
-    let desired:
-      'idle' |
-      'walk' |
-      'jump' = 'idle';
-
+    // Ataque: J ou X.
     if (
-      isJumping &&
-      oliviaJumpTextures.length > 0
+      attackPressed &&
+      oliviaAnimation !== 'attack'
     ) {
 
-      desired = 'jump';
+      oliviaAnimation = 'attack';
 
-    } else if (isMoving) {
+      olivia.textures =
+        oliviaAnimations.attack;
 
-      desired = 'walk';
+      olivia.animationSpeed =
+        10 / 60;
 
+      olivia.loop = false;
+      olivia.gotoAndPlay(0);
+
+      oliviaAttackTimer = 6;
     }
 
     if (
-      desired !== oliviaAnimation
+      oliviaAnimation === 'attack'
     ) {
 
-      oliviaAnimation =
-        desired;
+      oliviaAttackTimer--;
 
       if (
-        desired === 'jump'
+        oliviaAttackTimer <= 0 &&
+        !olivia.playing
       ) {
 
-        olivia.textures =
-          oliviaJumpTextures;
-
-        olivia.animationSpeed =
-          0.3;
-
-        olivia.loop =
-          false;
-
-      } else if (
-        desired === 'walk'
-      ) {
+        oliviaAnimation =
+          player.onGround
+            ? (isMoving ? 'walk' : 'idle')
+            : 'jump';
 
         olivia.textures =
-          oliviaWalkTextures;
+          oliviaAnimations[
+            oliviaAnimation
+          ];
 
         olivia.animationSpeed =
-          0.5;
+          oliviaAnimation === 'jump'
+            ? 8 / 60
+            : 4 / 60;
 
         olivia.loop =
-          true;
+          oliviaAnimation !== 'jump';
 
-      } else {
-
-        olivia.textures =
-          oliviaIdleTextures;
-
-        olivia.animationSpeed =
-          0.15;
-
-        olivia.loop =
-          true;
+        olivia.gotoAndPlay(0);
       }
 
-      olivia.gotoAndPlay(0);
+    } else {
+
+      const isJumping =
+        !player.onGround;
+
+      let desired:
+        'idle' |
+        'walk' |
+        'jump' = 'idle';
+
+      if (isJumping) {
+
+        desired = 'jump';
+
+      } else if (isMoving) {
+
+        desired = 'walk';
+      }
+
+      if (
+        desired !== oliviaAnimation
+      ) {
+
+        oliviaAnimation =
+          desired;
+
+        olivia.textures =
+          oliviaAnimations[
+            desired
+          ];
+
+        olivia.animationSpeed =
+          desired === 'jump'
+            ? 8 / 60
+            : 4 / 60;
+
+        olivia.loop =
+          desired !== 'jump';
+
+        olivia.gotoAndPlay(0);
+      }
     }
 
-    // Direção
+    // Direção.
     if (movingLeft) {
-      olivia.scale.x =
-        -Math.abs(
-          olivia.scale.x
-        );
+
+      oliviaFacing = -1;
+
+    } else if (movingRight) {
+
+      oliviaFacing = 1;
     }
 
-    if (movingRight) {
-      olivia.scale.x =
-        Math.abs(
-          olivia.scale.x
-        );
-    }
+    olivia.scale.x =
+      Math.abs(
+        olivia.scale.x
+      ) * oliviaFacing;
   }
 
   // =================================
@@ -1102,8 +1009,7 @@ app.ticker.add(() => {
 
     olivia.y =
       player.y +
-      player.height -
-      5;
+      player.height;
   }
 
   // =================================
